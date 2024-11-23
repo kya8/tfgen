@@ -64,7 +64,7 @@ impl TfGraph {
     }
 
     fn find_node(&self, s: &str) -> Option<NodeIndex> {
-        self.g.node_indices().find(|ix| &self.g[*ix] == &s)
+        self.g.node_indices().find(|ix| self.g[*ix] == s)
     }
 
     fn find_or_add_node(&mut self, s: String) -> NodeIndex {

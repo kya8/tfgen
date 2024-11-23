@@ -88,7 +88,7 @@ fn parse_input(line: &str) -> Option<Input> {
     }
 }
 
-const HELP_TEXT: &'static str =
+const HELP_TEXT: &str =
 "\
 Add a transform: Source -> Target: tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat
 Query transform: Source -> Target
