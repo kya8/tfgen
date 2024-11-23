@@ -11,6 +11,10 @@ fn main() -> ExitCode {
 
     for line in stdin().lines() {
         let line = line.expect("Error reading input");
+        // allow blank lines
+        if line.is_empty() {
+            continue;
+        }
         let Some(input) = parse_input(&line) else {
             eprintln!("Invalid input!");
             continue;
@@ -43,7 +47,7 @@ fn main() -> ExitCode {
 }
 
 fn parse_csv<T: FromStr>(s: &str, delim: char) -> Result<Vec<T>, <T as FromStr>::Err> {
-    s.trim_matches(['[', ']'])
+    s.trim_matches(['[', ']', ' '])
         .split(delim)
         .map(|x| x.trim().parse())
         .collect()
@@ -57,6 +61,8 @@ enum Input {
     Quit,
     Help,
     //Show
+    //Load file
+    //Export
 }
 
 fn parse_input(line: &str) -> Option<Input> {
