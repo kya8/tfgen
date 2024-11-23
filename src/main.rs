@@ -4,10 +4,11 @@ use tfgen::{
     TfGraph,
 };
 use nalgebra as na;
+use owo_colors::OwoColorize;
 
 fn main() -> ExitCode {
     let mut g = TfGraph::default();
-    println!("Enter a command. h for help.");
+    println!("{}", "Enter a command. h for help.".blue());
 
     for line in stdin().lines() {
         let line = line.expect("Error reading input");
@@ -16,7 +17,7 @@ fn main() -> ExitCode {
             continue;
         }
         let Some(input) = parse_input(&line) else {
-            eprintln!("Invalid input!");
+            eprintln!("{}", "Invalid input!".bright_red());
             continue;
         };
 
@@ -24,20 +25,20 @@ fn main() -> ExitCode {
             Input::Quit => break,
             Input::Reset => {
                 g.reset();
-                println!("Graph was reset.");
+                println!("{}", "Graph was reset.".blue());
             }
-            Input::Help => print!("{HELP_TEXT}"),
+            Input::Help => print_help(),
             Input::Add { from, to, tf } =>
                 if g.add_tf(from, to, tf).is_none() {
-                    eprintln!("Could not add cyclic transform");
+                    eprintln!("{}", "Could not add cyclic transform".bright_red());
                 }
             Input::Query { from, to } => {
                 if let Some(tf) = g.query_tf(&from, &to) {
                     let mat: na::Matrix4<f64> = na::convert(tf);
-                    println!("Transform from \"{from}\" to \"{to}\":");
+                    println!("Transform from {} to {}:", from.green(), to.green());
                     println!("{mat}[x,y,z, qx,qy,qz,qw]: {:?}", tf.to7());
                 } else {
-                    eprintln!("No transform between \"{from}\" and \"{to}\"!");
+                    eprintln!("No transform between {} and {}!", from.green(), to.green());
                 }
             }
         }
@@ -88,14 +89,13 @@ fn parse_input(line: &str) -> Option<Input> {
     }
 }
 
-const HELP_TEXT: &str =
-"\
-Add a transform: Source -> Target: tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat
-Query transform: Source -> Target
-Remove all transforms: r
-Quit: q
-Help: h | help
-";
+fn print_help() {
+    println!("{} Add a transform: Source -> Target: tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat", "*".blue().bold());
+    println!("{} Query transform: Source -> Target", "*".blue().bold());
+    println!("{} Remove all transforms: r", "*".blue().bold());
+    println!("{} Quit: q", "*".blue().bold());
+    println!("{} Help: h | help", "*".blue().bold());
+}
 
 #[cfg(test)]
 mod test {
