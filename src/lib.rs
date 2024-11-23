@@ -27,7 +27,15 @@ impl TfGraph {
         let a = self.find_or_add_node(src);
         let b = self.find_or_add_node(dst);
 
-        let edge_new = self.g.update_edge(a, b, tf);
+        //let edge_new = self.g.update_edge(a, b, tf);
+        // update_edge() will update b->a edge as well (for undirected). This is not what we want.
+        let edge_new =
+            if let Some((eid, Direction::Outgoing /* Only update if direction matches */)) = self.g.find_edge_undirected(a, b) {
+                self.g[eid] = tf;
+                eid
+            } else {
+                self.g.add_edge(a, b, tf)
+            };
         if is_cyclic_undirected(&self.g) {
             // Graph can only become cyclic when both nodes are pre-existing.
             // So we only need to delete the new edge.
