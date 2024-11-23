@@ -46,7 +46,7 @@ impl TfGraph {
         Some(())
     }
 
-    pub fn query_tf(&self, src: &str, dst: &str) -> Option<SE3> {
+    pub fn query_tf(&self, src: &str, dst: &str) -> Option<(SE3, Vec<&str>)> {
         let (Some(src), Some(dst)) = (self.find_node(src), self.find_node(dst)) else {
             return None;
         };
@@ -54,7 +54,7 @@ impl TfGraph {
         let (_, path_nodes) = astar(&self.g, src, |i| i == dst, |_| 1, |_| 0)?;
         // If src == dst, path contains 1 node, so tf is identity.
         let mut tf = SE3::identity();
-        for (a, b) in path_nodes.into_iter().tuple_windows() {
+        for (&a, &b) in path_nodes.iter().tuple_windows() {
             // or array_windows
             let (edge, dir) = self.g.find_edge_undirected(a, b).unwrap();
             let lhs = match dir {
@@ -64,7 +64,7 @@ impl TfGraph {
             tf = lhs * tf;
         }
 
-        Some(tf)
+        Some((tf, path_nodes.into_iter().map(|ix| self.g[ix].as_str()).collect()))
     }
 
     pub fn reset(&mut self) {
@@ -99,7 +99,9 @@ mod test {
         // detect cycles
         assert!(g.add_tf("b".to_owned(), "c".to_owned(), bc.clone()).is_none());
 
-        assert_relative_eq!(g.query_tf("b", "c").unwrap(), bc);
+        let (bc_q, bc_path) = g.query_tf("b", "c").unwrap();
+        assert_relative_eq!(bc_q, bc);
+        assert_eq!(bc_path, ["b", "a", "c"]);
         // Not connected
         assert!(g.query_tf("a", "x").is_none());
     }

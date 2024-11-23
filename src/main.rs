@@ -33,9 +33,9 @@ fn main() -> ExitCode {
                     eprintln!("{}", "Could not add cyclic transform".bright_red());
                 }
             Input::Query { from, to } => {
-                if let Some(tf) = g.query_tf(&from, &to) {
+                if let Some((tf, path)) = g.query_tf(&from, &to) {
                     let mat: na::Matrix4<f64> = na::convert(tf);
-                    println!("Transform from {} to {}:", from.green(), to.green());
+                    println!("Transform from {} to {}: (Path: {})", from.green(), to.green(), path.join(" -> "));
                     println!("{mat}[x,y,z, qx,qy,qz,qw]: {:?}", tf.to7());
                 } else {
                     eprintln!("No transform between {} and {}!", from.green(), to.green());
