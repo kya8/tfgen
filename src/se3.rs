@@ -43,14 +43,26 @@ pub fn from_array(a: &[f64]) -> Option<SE3> {
             // Can't use na::convert here.
             let mat = na::Matrix3::from_row_slice(a);
             if mat.is_special_orthogonal(1e-6) {
-                Some(na::convert(na::Rotation3::from_matrix_unchecked(mat)))
+                Some(na::convert(na::Rotation::from_matrix_unchecked(mat)))
             } else {
                 None
             }
             // Or extend to 4x4 matrix.
         }
         // SE3 mat
-        16 => na::try_convert(na::Matrix4::from_row_slice(a)),
+        16 => {
+            let mat = na::Matrix4::from_row_slice(a);
+            let rot = mat.fixed_view::<3, 3>(0, 0).into_owned(); // make owned matrix from view
+            let trans = mat.fixed_view::<3, 1>(0, 3).into_owned();
+            // Should check bottom row [0, 0, 0, 1]
+            if rot.is_special_orthogonal(1e-6) {
+                Some(
+                    SE3::from_parts(trans.into(), na::Rotation::from_matrix_unchecked(rot).into())
+                )
+            } else {
+                None
+            }
+        }
         _ => None
     }
 }
