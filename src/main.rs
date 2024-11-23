@@ -90,11 +90,11 @@ fn parse_input(line: &str) -> Option<Input> {
 }
 
 fn print_help() {
-    println!("{} Add a transform: Source -> Target: tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat", "*".blue().bold());
-    println!("{} Query transform: Source -> Target", "*".blue().bold());
-    println!("{} Remove all transforms: r", "*".blue().bold());
-    println!("{} Quit: q", "*".blue().bold());
-    println!("{} Help: h | help", "*".blue().bold());
+    println!("{} Source -> Target: tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat", "* Add a transform:".blue().bold());
+    println!("{} Source -> Target", "* Query transform:".blue().bold());
+    println!("{} r", "* Remove all transforms:".blue().bold());
+    println!("{} q", "* Quit:".blue().bold());
+    println!("{} h | help", "* Help:".blue().bold());
 }
 
 #[cfg(test)]
