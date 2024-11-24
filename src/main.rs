@@ -1,4 +1,4 @@
-use std::{io::stdin, process::ExitCode, str::FromStr};
+use std::{fs::File, io::stdin, process::ExitCode, str::FromStr};
 use tfgen::{
     se3::{self, To7, SE3},
     TfGraph,
@@ -35,10 +35,35 @@ fn main() -> ExitCode {
             Input::Query { from, to } => {
                 if let Some((tf, path)) = g.query_tf(&from, &to) {
                     let mat: na::Matrix4<f64> = na::convert(tf);
-                    println!("Transform from {} to {}: (Path: {})", from.green(), to.green(), path.join(" -> "));
+                    println!("Transform from {} to {}: (Path: {})", from.bold().green(), to.bold().green(), path.join(" -> "));
                     println!("{mat}[x,y,z, qx,qy,qz,qw]: {:?}", tf.to7());
                 } else {
-                    eprintln!("No transform between {} and {}!", from.green(), to.green());
+                    eprintln!("No transform between {} and {}!", from.bold().green(), to.bold().green());
+                }
+            }
+            Input::Load(file) => {
+                let Ok(mut fd) = File::open(&file) else {
+                    eprintln!("Could not open {file}!");
+                    continue;
+                };
+                if g.load_json(&mut fd).is_ok() {
+                    println!("Loaded transforms from {file}.");
+                }
+                else {
+                    eprintln!("Could not load file.");
+                }
+            }
+            Input::Save(file) => {
+                let good =
+                    if let Ok(mut fd) = File::create(&file) {
+                        g.dump_json(&mut fd).is_ok()
+                    } else {
+                        false
+                    };
+                if good {
+                    println!("Transform graph was saved to {file}.");
+                } else {
+                    eprintln!("Error saving transform graph.");
                 }
             }
         }
@@ -61,16 +86,30 @@ enum Input {
     Reset,
     Quit,
     Help,
-    //Show
-    //Load file
-    //Export
+    //Show,
+    Load(String), // &str
+    Save(String),
 }
 
 fn parse_input(line: &str) -> Option<Input> {
     match line.trim() {
-        "q" => Some(Input::Quit),
-        "r" => Some(Input::Reset),
+        "q" | "quit" => Some(Input::Quit),
+        "r" | "reset" => Some(Input::Reset),
         "h" | "help" => Some(Input::Help),
+        s if s.starts_with("save ") => {
+            let s = s[5..].trim();
+            if s.is_empty() {
+                return None;
+            }
+            Some(Input::Save(s.to_owned())) // slice ascii bytes should work
+        }
+        s if s.starts_with("load ") => {
+            let s = s[5..].trim();
+            if s.is_empty() {
+                return None;
+            }
+            Some(Input::Load(s.to_owned()))
+        }
         s => {
             let (src, rem) = s.split_once("->")?;
             if let Some((dst, tf)) = rem.split_once(':') {
@@ -90,11 +129,13 @@ fn parse_input(line: &str) -> Option<Input> {
 }
 
 fn print_help() {
-    println!("{} Source -> Target: tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat", "* Add a transform:".blue().bold());
+    println!("{} Source -> Target: <tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat>", "* Add a transform:".blue().bold());
     println!("{} Source -> Target", "* Query transform:".blue().bold());
-    println!("{} r", "* Remove all transforms:".blue().bold());
-    println!("{} q", "* Quit:".blue().bold());
+    println!("{} r | reset", "* Remove all transforms:".blue().bold());
+    println!("{} q | quit", "* Quit:".blue().bold());
     println!("{} h | help", "* Help:".blue().bold());
+    println!("{} save <FILE_NAME>", "* Save to json:".blue().bold());
+    println!("{} load <FILE_NAME>", "* Load from json:".blue().bold());
 }
 
 #[cfg(test)]
@@ -122,12 +163,16 @@ mod test {
                     to: "Alice".to_owned(),
                 },
             ),
+            (
+                "load  some file ",
+                Input::Load("some file".to_owned())
+            )
         ];
 
         let bad_inputs = [
             "",
             "qr",
-            //"q ",
+            "save ",
             "Alice -> Bob : 0,0,0,0,0",
         ];
 

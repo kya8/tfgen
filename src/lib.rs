@@ -1,3 +1,5 @@
+use std::io;
+
 use itertools::Itertools;
 use petgraph::{
     algo::{astar, is_cyclic_undirected},
@@ -10,9 +12,11 @@ pub mod se3;
 
 #[derive(Debug, Default)]
 pub struct TfGraph {
-    g: UnGraph<String, SE3>, // we might want to use GraphMap and HashMap<String, int> here.
+    g: G, // we might want to use GraphMap and HashMap<String, int> here.
                              // To find a node, we have to iterate through all nodes. Or use some external map/set.
 }
+
+type G = UnGraph<String, SE3>;
 
 impl TfGraph {
     /// Add a transform edge to the graph.
@@ -78,6 +82,32 @@ impl TfGraph {
     fn find_or_add_node(&mut self, s: String) -> NodeIndex {
         self.find_node(&s).unwrap_or_else(|| self.g.add_node(s))
     }
+
+    pub fn dump_json(&self, writer: &mut impl io::Write) -> Result<(), impl std::error::Error> {
+        serde_json::to_writer_pretty(writer, &self.g)
+    }
+
+    pub fn load_json(&mut self, reader: &mut impl io::Read) -> Result<(), ()>  {
+        let g: G = serde_json::from_reader(reader).map_err(|_|())?;
+        if is_cyclic_undirected(&g) {
+            Err(())
+        }
+        else {
+            self.g = g;
+            Ok(())
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub mod error {
+
+    pub enum Error {
+        //Input,
+        Io,
+        Cycle,
+    }
+
 }
 
 #[cfg(test)]

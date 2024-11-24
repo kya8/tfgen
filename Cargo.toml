@@ -5,9 +5,10 @@ edition = "2021"
 
 [dependencies]
 itertools = "0.13.0"
-nalgebra = "0.33.2"
+nalgebra = { version = "0.33.2", features = ["serde-serialize"] }
 owo-colors = "4.1.0"
-petgraph = "0.6.5"
+petgraph = { version = "0.6.5", features = ["serde-1"]}
+serde_json = "1.0.133"
 
 [dev-dependencies]
 approx = "0.5.1"
