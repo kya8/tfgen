@@ -1,4 +1,5 @@
 use std::{fs::File, io::stdin, process::ExitCode, str::FromStr};
+use itertools::Itertools;
 use tfgen::{
     se3::{self, To7, SE3},
     TfGraph,
@@ -66,6 +67,10 @@ fn main() -> ExitCode {
                     eprintln!("Error saving transform graph.");
                 }
             }
+            Input::Show => {
+                println!("{} {}", "Nodes:".blue().bold(), g.nodes().join(", "));
+                println!("{} {}", "Transforms:".blue().bold(), g.transforms().map(|(a, b)| format!("{} -> {}", a, b)).join(", "));
+            }
         }
     }
 
@@ -86,7 +91,7 @@ enum Input {
     Reset,
     Quit,
     Help,
-    //Show,
+    Show,
     Load(String), // &str
     Save(String),
 }
@@ -96,6 +101,7 @@ fn parse_input(line: &str) -> Option<Input> {
         "q" | "quit" => Some(Input::Quit),
         "r" | "reset" => Some(Input::Reset),
         "h" | "help" => Some(Input::Help),
+        "s" | "show" => Some(Input::Show),
         s if s.starts_with("save ") => {
             let s = s[5..].trim();
             if s.is_empty() {
@@ -132,6 +138,7 @@ fn print_help() {
     println!("{} Source -> Target: <tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat>", "* Add a transform:".blue().bold());
     println!("{} Source -> Target", "* Query transform:".blue().bold());
     println!("{} r | reset", "* Remove all transforms:".blue().bold());
+    println!("{} s | show", "* Show graph status:".blue().bold());
     println!("{} q | quit", "* Quit:".blue().bold());
     println!("{} h | help", "* Help:".blue().bold());
     println!("{} save <FILE_NAME>", "* Save to json:".blue().bold());
@@ -148,6 +155,7 @@ mod test {
             ("q", Input::Quit),
             ("r ", Input::Reset),
             ("help", Input::Help),
+            ("show", Input::Show),
             (
                 "Alice -> Bob : 0,0,0",
                 Input::Add {
@@ -157,7 +165,7 @@ mod test {
                 },
             ),
             (
-                "Bob -> Alice",
+                "Bob ->Alice ",
                 Input::Query {
                     from: "Bob".to_owned(),
                     to: "Alice".to_owned(),
@@ -174,6 +182,7 @@ mod test {
             "qr",
             "save ",
             "Alice -> Bob : 0,0,0,0,0",
+            "a->b: 1,1,0,0,0,0,0,0,1"
         ];
 
         for (line, result) in inputs {

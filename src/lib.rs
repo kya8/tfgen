@@ -2,9 +2,7 @@ use std::io;
 
 use itertools::Itertools;
 use petgraph::{
-    algo::{astar, is_cyclic_undirected},
-    graph::{NodeIndex, UnGraph},
-    Direction,
+    algo::{astar, is_cyclic_undirected}, graph::{NodeIndex, UnGraph}, visit::EdgeRef, Direction
 };
 use se3::SE3; // tuple_windows
 
@@ -97,6 +95,15 @@ impl TfGraph {
             Ok(())
         }
     }
+
+    pub fn nodes(&self) -> impl Iterator<Item = &str> {
+        self.g.node_weights().map(|s| s.as_str())
+    }
+
+    pub fn transforms(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.g.edge_references()
+        .map(|r| (self.g[r.source()].as_str(), self.g[r.target()].as_str()))
+    }
 }
 
 #[allow(dead_code)]
@@ -125,6 +132,9 @@ mod test {
         g.add_tf("a".to_owned(), "b".to_owned(), ab).unwrap();
         g.add_tf("a".to_owned(), "c".to_owned(), ac).unwrap();
         g.add_tf("x".to_owned(), "y".to_owned(), SE3::identity()).unwrap();
+
+        assert!(g.nodes().eq(["a", "b", "c", "x", "y"].into_iter()));
+        assert!(g.transforms().eq([("a", "b"), ("a", "c"), ("x", "y")].into_iter()));
 
         // detect cycles
         assert!(g.add_tf("b".to_owned(), "c".to_owned(), bc.clone()).is_none());
