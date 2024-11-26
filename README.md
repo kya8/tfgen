@@ -20,6 +20,7 @@ A transform can be specified in multiple ways:
 * $q_x, q_y, q_z, q_w$ (rotation only)
 * $m_{00}, m_{01}, m_{02}, m_{10}, m_{11}, m_{12}, m_{20}, m_{21}, m_{22}$ (3x3 matrix in row-major order. Rotation only)
 * $m_{00}, m_{01}, m_{02}, m_{03}, m_{10}, m_{11}, m_{12}, m_{13}, m_{20}, m_{21}, m_{22}, m_{23}, m_{30}, m_{31}, m_{32}, m_{33}$ (4x4 matrix in row-major order)
+* random: Generates a random transform with uniformly sampled rotation from $SO(3)$
 
 Add another transform:
 ```

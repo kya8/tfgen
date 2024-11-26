@@ -1,4 +1,6 @@
 use nalgebra as na;
+use rand::{distributions::Uniform, prelude::Distribution};
+use rand_distr::StandardNormal;
 
 pub type SE3 = na::Isometry3<f64>;
 
@@ -67,6 +69,17 @@ pub fn from_array(a: &[f64]) -> Option<SE3> {
     }
 }
 
+/// Generate a random transform.
+/// The rotation part is sampled uniformly on S^3 (unit quaternion).
+/// The translation part is sampled uniformly within the cube `[-1, +1]`.
+pub fn random() -> SE3 {
+    use std::array::from_fn;
+
+    let mut rng = rand::thread_rng();
+    let trans = from_fn(|_| Uniform::new_inclusive(-1.0, 1.0).sample(&mut rng));
+    let quat = from_fn(|_| StandardNormal.sample(&mut rng));
+    SE3::from_parts(trans.into(), na::UnitQuaternion::from_quaternion(quat.into())) // normalized here
+}
 
 #[cfg(test)]
 mod test {

@@ -122,7 +122,10 @@ fn parse_input(line: &str) -> Option<Input> {
                 Some(Input::Add {
                     from: src.trim().to_owned(),
                     to: dst.trim().to_owned(),
-                    tf: se3::from_array(parse_csv(tf, ',').ok()?.as_slice())?,
+                    tf: match tf.trim() {
+                        "rand" | "random" => se3::random(),
+                        tf => se3::from_array(parse_csv(tf, ',').ok()?.as_slice())?
+                    }
                 })
             } else {
                 Some(Input::Query {
@@ -135,7 +138,7 @@ fn parse_input(line: &str) -> Option<Input> {
 }
 
 fn print_help() {
-    println!("{} Source -> Target: <tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat>", "* Add a transform:".blue().bold());
+    println!("{} Source -> Target: <tx, ty, tz, qx, qy, qz, qw | tx, ty, tz | qx, qy, qz, qw | 3x3 mat | 4x4 mat | random>", "* Add a transform:".blue().bold());
     println!("{} Source -> Target", "* Query transform:".blue().bold());
     println!("{} r | reset", "* Remove all transforms:".blue().bold());
     println!("{} s | show", "* Show graph status:".blue().bold());
