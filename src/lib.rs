@@ -17,6 +17,11 @@ pub struct TfGraph {
 type G = UnGraph<String, SE3>;
 
 impl TfGraph {
+    /// Create an empty graph
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Add a transform edge to the graph.
     ///
     /// Returns `None` if the new edge would make the graph cyclic. Self loops are cyclic.
@@ -144,5 +149,17 @@ mod test {
         assert_eq!(bc_path, ["b", "a", "c"]);
         // Not connected
         assert!(g.query_tf("a", "x").is_none());
+    }
+
+    #[test]
+    fn large_tree() {
+        let mut g = TfGraph::new();
+        for i in 1..4096 { // A complete binary tree.
+            let parent = (i - 1) / 2;
+            g.add_tf(i.to_string(), parent.to_string(), se3::random()).unwrap();
+        }
+
+        g.query_tf("0", "4000").unwrap();
+        g.query_tf("2048", "4095").unwrap();
     }
 }

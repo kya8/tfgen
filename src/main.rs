@@ -8,7 +8,7 @@ use nalgebra as na;
 use owo_colors::OwoColorize;
 
 fn main() -> ExitCode {
-    let mut g = TfGraph::default();
+    let mut g = TfGraph::new();
     println!("{}", "Enter a command. h for help.".blue());
 
     for line in stdin().lines() {
