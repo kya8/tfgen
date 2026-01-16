@@ -1,0 +1,65 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "master", "ci" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        target:
+          - runner: ubuntu-latest
+            ostype: linux
+          - runner: windows-latest
+            ostype: windows
+          - runner: macos-latest
+            ostype: macos
+        profile: [release]
+        include:
+          - target.ostype: windows
+            exe_ext: ".exe"
+          - profile: release
+            output-dir: release
+
+    runs-on: ${{ matrix.target.runner }}
+
+    steps:
+
+    - uses: actions/checkout@v5
+
+    - name: Get rust target
+      id: get-target
+      run: |
+        echo "rust_target=$(rustc -vV | sed -n 's|host: ||p')" >> "$GITHUB_OUTPUT"
+
+    - name: Cache for cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: cargo-${{ steps.get-target.outputs.rust_target }}-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build
+      run: cargo build --profile ${{ matrix.profile }}
+
+    - name: Run tests
+      run: cargo test --profile ${{ matrix.profile }}
+
+    - name: Upload build
+      uses: actions/upload-artifact@v4
+      with:
+        name: tfgen-${{ steps.get-target.outputs.rust_target }}
+        path: target/${{ matrix.output-dir }}/tfgen${{ matrix.exe_ext }}
