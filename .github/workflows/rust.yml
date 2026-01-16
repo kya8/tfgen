@@ -27,7 +27,8 @@ jobs:
             ostype: macos
         profile: [release]
         include:
-          - target.ostype: windows
+          - target:
+              ostype: windows
             exe_ext: ".exe"
           - profile: release
             output-dir: release
